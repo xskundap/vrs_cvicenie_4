@@ -160,9 +160,24 @@ uint8_t checkButtonState(GPIO_TypeDef* PORT, uint8_t PIN, uint8_t edge, uint8_t 
 	  volatile uint32_t edge2 = (ed << EXTI_IMR_MR3_Pos);
 	
 	  //type your code for "checkButtonState" implementation here:
+ 	  
+	  while(button_state < samples_required && timeout < samples_window)
+		{
+			if(!(PORT->IDR & (1 << PIN))/*LL_GPIO_IsInputPinSet(PORT, PIN)*/)
+			{
+				button_state += 1;
+			}
+			else
+			{
+				button_state = 0;
+			}
+
+			timeout += 1;
+			LL_mDelay(1);
+	   }  
 	
 	  //if(HAL_GPIO_ReadPin(PORT, PIN)){
-	  if(!(PORT->IDR & (1 << PIN))/*LL_GPIO_IsInputPinSet(PORT, PIN)*/){	
+	  if(!(PORT->IDR & (1 << PIN) && ((button_state >= samples_required) && (timeout <= samples_window)))/*LL_GPIO_IsInputPinSet(PORT, PIN)*/){	
 		if(EXTI->FTSR == edge2){
 			
 			if(before){
