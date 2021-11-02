@@ -161,7 +161,7 @@ uint8_t checkButtonState(GPIO_TypeDef* PORT, uint8_t PIN, uint8_t edge, uint8_t 
 			switch_state = 0;
 			before = 0;
 		}
-	  else{
+	  	else{
 			switch_state = 1;
 			before = 1;
 		}
