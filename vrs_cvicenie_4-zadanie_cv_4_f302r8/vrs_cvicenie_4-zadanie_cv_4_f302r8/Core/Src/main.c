@@ -51,16 +51,36 @@ int main(void)
   /* Configure external interrupt - EXTI*/
 
   	  //type your code for EXTI configuration (priority, enable EXTI, setup EXTI for input pin, trigger edge) here:
+	  NVIC_SetPriority(EXTI3_IRQn, 2);
+  	  NVIC_EnableIRQ(EXTI3_IRQn);
+	
+	  //SYSCFG->EXTICR[1] &= ~(0xFU << 0U);
+	????
+	  //Enable interrupt from EXTI line 3
+	  EXTI->IMR |= EXTI_IMR_MR3;
+	  //Set EXTI trigger to falling edge
+	  EXTI->RTSR &= ~(EXTI_IMR_MR3);
+	  EXTI->FTSR |= EXTI_IMR_MR3;
 
 
   /* Configure GPIOC-3 pin as an input pin - button */
 
 	  //type your code for GPIO configuration here:
+	  RCC->AHBENR |= RCC_AHBENR_GPIOAEN;
+	  GPIOC->MODER &= ~(GPIO_MODER_MODER3);
+	  GPIOC->PUPDR &= ~(GPIO_PUPDR_PUPDR3);
+	  GPIOC->PUPDR |= GPIO_PUPDR_PUPDR3_0;
 
 
   /* Configure GPIOA-4 pin as an output pin - LED */
 
 	  //type your code for GPIO configuration here:
+	  RCC->AHBENR |= RCC_AHBENR_GPIOBEN;
+	  GPIOA->MODER &= ~(GPIO_MODER_MODER4);
+	  GPIOA->MODER |= GPIO_MODER_MODER4_0;
+	  GPIOA->OTYPER &= ~(GPIO_OTYPER_OT_4);
+	  GPIOA->OSPEEDR &= ~(GPIO_OSPEEDER_OSPEEDR4);
+	  GPIOA->PUPDR &= ~(GPIO_PUPDR_PUPDR4);
 
 
   while (1)
@@ -136,6 +156,16 @@ void Error_Handler(void)
 uint8_t checkButtonState(GPIO_TypeDef* PORT, uint8_t PIN, uint8_t edge, uint8_t samples_window, uint8_t samples_required)
 {
 	  //type your code for "checkButtonState" implementation here:
+	  if(HAL_GPIO_ReadPin(PORT, PIN)){
+		if(before){
+			switch_state = 0;
+			before = 0;
+		}
+	  else{
+			switch_state = 1;
+			before = 1;
+		}
+	}
 }
 
 
@@ -154,6 +184,7 @@ void EXTI3_IRQHandler(void)
 	/* Clear EXTI3 pending register flag */
 
 		//type your code for pending register flag clear here:
+	EXTI->PR |= (EXTI_PR_PIF3);
 }
 
 
