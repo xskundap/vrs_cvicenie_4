@@ -54,8 +54,8 @@ int main(void)
 	  NVIC_SetPriority(EXTI3_IRQn, 2);
   	  NVIC_EnableIRQ(EXTI3_IRQn);
 	
-	  //SYSCFG->EXTICR[1] &= ~(0xFU << 0U);
-	????
+	  //SYSCFG->EXTICR[0] &= ~(0xDU << 12U);
+	  SYSCFG->EXTICR[0] |= SYSCFG_EXTICR1_EXTI3_PC;
 	  //Enable interrupt from EXTI line 3
 	  EXTI->IMR |= EXTI_IMR_MR3;
 	  //Set EXTI trigger to falling edge
@@ -155,15 +155,26 @@ void Error_Handler(void)
 
 uint8_t checkButtonState(GPIO_TypeDef* PORT, uint8_t PIN, uint8_t edge, uint8_t samples_window, uint8_t samples_required)
 {
+	  uint8_t button_state = 0, timeout = 0;
+	  uint32_t ed = edge;
+	  volatile uint32_t edge2 = (ed << EXTI_IMR_MR3_Pos);
+	
 	  //type your code for "checkButtonState" implementation here:
-	  if(HAL_GPIO_ReadPin(PORT, PIN)){
-		if(before){
-			switch_state = 0;
-			before = 0;
-		}
-	  	else{
-			switch_state = 1;
-			before = 1;
+	
+	  //if(HAL_GPIO_ReadPin(PORT, PIN)){
+	  if(!(PORT->IDR & (1 << PIN))/*LL_GPIO_IsInputPinSet(PORT, PIN)*/){	
+		if(EXTI->FTSR == edge2){
+			
+			if(before){
+				//switch_state = 0;
+				before = 0;
+				return 0;
+			}
+	  		else{
+				//switch_state = 1;
+				before = 1;
+				return 1;
+			}
 		}
 	}
 }
