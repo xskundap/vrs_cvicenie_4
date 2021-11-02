@@ -51,36 +51,39 @@ int main(void)
   /* Configure external interrupt - EXTI*/
 
   	  //type your code for EXTI configuration (priority, enable EXTI, setup EXTI for input pin, trigger edge) here:
-	  NVIC_SetPriority(EXTI3_IRQn, 2);
-  	  NVIC_EnableIRQ(EXTI3_IRQn);
-	
-	  //SYSCFG->EXTICR[0] &= ~(0xDU << 12U);
-	  SYSCFG->EXTICR[0] |= SYSCFG_EXTICR1_EXTI3_PC;
-	  //Enable interrupt from EXTI line 3
-	  EXTI->IMR |= EXTI_IMR_MR3;
-	  //Set EXTI trigger to falling edge
-	  EXTI->RTSR &= ~(EXTI_IMR_MR3);
-	  EXTI->FTSR |= EXTI_IMR_MR3;
+  /*EXTI configuration*/
+  NVIC_SetPriority(EXTI3_IRQn, 2);
+  NVIC_EnableIRQ(EXTI3_IRQn);
+    //Set interrupt priority and enable EXTI
+    //NVIC->IP[9] |= 2 << 4;
+    //NVIC->ISER[0] |= 1 << 10;
 
+    /*set EXTI source PC3*/
+    //SYSCFG->EXTICR[1] &= ~(0xD << 12);
+  SYSCFG->EXTICR[0] |= SYSCFG_EXTICR1_EXTI3_PC;
+    //Enable interrupt from EXTI line 3
+  EXTI->IMR |= EXTI_IMR_MR3;
+    //Set EXTI trigger to falling edge
+  EXTI->RTSR &= ~(EXTI_IMR_MR3);
+  EXTI->FTSR |= EXTI_IMR_MR3;
 
   /* Configure GPIOC-3 pin as an input pin - button */
 
 	  //type your code for GPIO configuration here:
-	  RCC->AHBENR |= RCC_AHBENR_GPIOAEN;
-	  GPIOC->MODER &= ~(GPIO_MODER_MODER3);
-	  GPIOC->PUPDR &= ~(GPIO_PUPDR_PUPDR3);
-	  GPIOC->PUPDR |= GPIO_PUPDR_PUPDR3_0;
-
+  RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
+  GPIOC->MODER &= ~(GPIO_MODER_MODER3);
+  GPIOC->PUPDR &= ~(GPIO_PUPDR_PUPDR3);
+  GPIOC->PUPDR |= GPIO_PUPDR_PUPDR3_0;
 
   /* Configure GPIOA-4 pin as an output pin - LED */
 
 	  //type your code for GPIO configuration here:
-	  RCC->AHBENR |= RCC_AHBENR_GPIOBEN;
-	  GPIOA->MODER &= ~(GPIO_MODER_MODER4);
-	  GPIOA->MODER |= GPIO_MODER_MODER4_0;
-	  GPIOA->OTYPER &= ~(GPIO_OTYPER_OT_4);
-	  GPIOA->OSPEEDR &= ~(GPIO_OSPEEDER_OSPEEDR4);
-	  GPIOA->PUPDR &= ~(GPIO_PUPDR_PUPDR4);
+  RCC->AHBENR |= RCC_AHBENR_GPIOAEN;
+  GPIOA->MODER &= ~(GPIO_MODER_MODER4);
+  GPIOA->MODER |= GPIO_MODER_MODER4_0;
+  GPIOA->OTYPER &= ~(GPIO_OTYPER_OT_4);
+  GPIOA->OSPEEDR &= ~(GPIO_OSPEEDER_OSPEEDR4);
+  GPIOA->PUPDR &= ~(GPIO_PUPDR_PUPDR4);
 
 
   while (1)
@@ -88,14 +91,14 @@ int main(void)
 	  // Modify the code below so it sets/resets used output pin connected to the LED
 	  if(switch_state)
 	  {
-		  GPIOB->BSRR |= GPIO_BSRR_BS_13;
+		  GPIOA->BSRR |= GPIO_BSRR_BS_4;
 		  for(uint16_t i=0; i<0xFF00; i++){}
-		  GPIOB->BRR |= GPIO_BRR_BR_13;
+		  GPIOA->BRR |= GPIO_BRR_BR_4;
 		  for(uint16_t i=0; i<0xFF00; i++){}
 	  }
 	  else
 	  {
-		  GPIOB->BRR |= GPIO_BRR_BR_13;
+		  GPIOA->BRR |= GPIO_BRR_BR_4;
 	  }
   }
 }
@@ -155,15 +158,15 @@ void Error_Handler(void)
 
 uint8_t checkButtonState(GPIO_TypeDef* PORT, uint8_t PIN, uint8_t edge, uint8_t samples_window, uint8_t samples_required)
 {
-	  uint8_t button_state = 0, timeout = 0;
-	  uint32_t ed = edge;
-	  volatile uint32_t edge2 = (ed << EXTI_IMR_MR3_Pos);
-	
 	  //type your code for "checkButtonState" implementation here:
- 	  
-	  while(button_state < samples_required && timeout < samples_window)
+	uint8_t button_state = 0, timeout = 0;
+	uint32_t ed = edge;
+
+	volatile uint32_t edge2 = (ed << EXTI_IMR_MR3_Pos);
+
+		while(button_state < samples_required && timeout < samples_window)
 		{
-			if(!(PORT->IDR & (1 << PIN))/*LL_GPIO_IsInputPinSet(PORT, PIN)*/)
+			if((!(PORT->IDR & (1 << PIN)) && (EXTI->FTSR == edge2) )/*LL_GPIO_IsInputPinSet(PORT, PIN)*/)
 			{
 				button_state += 1;
 			}
@@ -174,24 +177,16 @@ uint8_t checkButtonState(GPIO_TypeDef* PORT, uint8_t PIN, uint8_t edge, uint8_t 
 
 			timeout += 1;
 			LL_mDelay(1);
-	   }  
-	
-	  //if(HAL_GPIO_ReadPin(PORT, PIN)){
-	  if(!(PORT->IDR & (1 << PIN) && ((button_state >= samples_required) && (timeout <= samples_window)))/*LL_GPIO_IsInputPinSet(PORT, PIN)*/){	
-		if(EXTI->FTSR == edge2){
-			
-			if(before){
-				//switch_state = 0;
-				before = 0;
-				return 0;
-			}
-	  		else{
-				//switch_state = 1;
-				before = 1;
-				return 1;
-			}
 		}
-	}
+
+		if((button_state >= samples_required) && (timeout <= samples_window))
+		{
+			return 1;
+		}
+		else
+		{
+			return 0;
+		}
 }
 
 
