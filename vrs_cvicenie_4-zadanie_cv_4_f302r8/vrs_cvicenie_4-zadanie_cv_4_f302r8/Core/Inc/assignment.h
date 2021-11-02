@@ -12,7 +12,7 @@
 #include "main.h"
 
 // defines for input port used by button
-#define		GPIO_PORT_BUTTON				GPIOA
+#define		GPIO_PORT_BUTTON				GPIOC
 #define		GPIO_PIN_BUTTON					3
 
 // defines for "checkButtonState"
