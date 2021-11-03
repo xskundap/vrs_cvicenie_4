@@ -203,7 +203,6 @@ void EXTI3_IRQHandler(void)
 	}
 
 	/* Clear EXTI3 pending register flag */
-
 		//type your code for pending register flag clear here:
 	EXTI->PR |= (EXTI_PR_PIF3);
 }
