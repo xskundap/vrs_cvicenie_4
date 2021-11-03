@@ -22,7 +22,7 @@
 #include "assignment.h"
 
 void SystemClock_Config(void);
-uint8_t check_button_state(GPIO_TypeDef* PORT, uint8_t PIN);
+uint8_t checkButtonState(GPIO_TypeDef* PORT, uint8_t PIN, uint8_t edge, uint8_t samples_window, uint8_t samples_required);
 
 uint8_t switch_state = 0;
 
